@@ -66,6 +66,7 @@ print(l2)
 l3 = tf.nn.relu(tf.matmul(l2, Wh3) + bh3) ;
 print(l2)
 
+#Kreuzproduktverhältnis
 logits = tf.matmul(l3, W)+b;
 print(logits)
 
@@ -77,17 +78,41 @@ loss = tf.reduce_mean(lossBySample) ;
 # classification accuracy
 nrCorrect = tf.reduce_mean(tf.cast(tf.equal (tf.argmax(logits,axis=1), tf.argmax(label_placeholder,axis=1)), tf.float32)) ;
 
-optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.2) ;  # 0.0000 #0.00002
+optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.1) ;  # 0.00001 #0.00002
 update = optimizer.minimize(loss) ;
 
 iteration = 0 ;
 
-for iteration in range(0,10):
+for iteration in range(0,50):
 
   sess.run(update, feed_dict = fd) ;
   correct, lossVal,_W = sess.run([nrCorrect, loss,W], feed_dict = fd) ;
-  print("epoch ", iteration, "acc=", float(correct), "loss=", lossVal, "wmM=", _W.min(), _W.max()) ;
+################## HAT ####################
+  s = 0; # Init bei 0?
+  smax = 1; # 1? Woher ermitteln?
+  # B = total number of batches #Returns scalar
+  B = tf.shape(data_placeholder)[0];
+  # b = batch Index
+  b = sess.run(B, {data_placeholder: testd});
+  #anneal s function.
+  s = (1 / smax) + (smax - (1 / smax)) - ((b - 1) / (B - 1));
+  #cast for multiplication
+  s = tf.cast(s, tf.float32);
 
+  # e = embedding task = layer output???
+  a1 = tf.nn.sigmoid(tf.math.multiply(s,l1));  # y = 1 / (1 + exp(-x)) Sigmoid !=  HAT
+  a2 = tf.nn.sigmoid(tf.math.multiply(s,l2));
+  a3 = tf.nn.sigmoid(tf.math.multiply(s,l3)); #Last Layer Binary Hardcoded TODO
+
+  a0 = tf.zeros(B, tf.float32);
+  aMax1 = tf.math.maximum(a0,a1);
+  aMax2 = tf.math.maximum(a1,a2);
+  aMax3 = tf.math.maximum(a2,a3);
+
+ #.. q1 = tf.math.multiply(tf.math.multiply(smax,a1),(tf.ones(B,tf-float32,a1))) ;
+  print("epoch", iteration, "acc=", float(correct), "loss=", lossVal, "wmM=", _W.min(), _W.max(), "s=", s);
+
+#############################################
 testout = sess.run(logits, feed_dict = {data_placeholder : testd}) ;
 
 testit = 0 ;
