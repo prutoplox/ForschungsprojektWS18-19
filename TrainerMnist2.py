@@ -61,7 +61,6 @@ bh3 = tf.Variable(npr.uniform(-0.01,0.01, [1,200]),dtype=tf.float32, name ="bh3"
 W = tf.Variable(npr.uniform(-0.01,0.01, [200,10]),dtype=tf.float32, name ="W") ;
 b = tf.Variable(npr.uniform(-0.01,0.01, [1,10]),dtype=tf.float32, name ="b") ;
 
-
 sess.run(tf.global_variables_initializer()) ;
 #elementwise max first only zeros
 aMax0 = tf.zeros(B, tf.float32);
@@ -99,16 +98,14 @@ update = optimizer.minimize(loss) ;
 
 iteration = 0 ;
 
-for iteration in range(0,50):
+for iteration in range(0,100): # 0,50 in HAT
 
   sess.run(update, feed_dict = fd) ;
   correct, lossVal,_W = sess.run([nrCorrect, loss,W], feed_dict = fd) ;
-
   #anneal s function.
   #cast for multiplication
   s = (1 / smax) + (smax - (1 / smax)) - ((b.eval(sess) - 1) / (B - 1));
   s = tf.cast(s , tf.float32) ;
-
   print("epoch", iteration, "acc=", float(correct), "loss=", lossVal, "wmM=", _W.min(), _W.max(), "s=", s);
 
 testout = sess.run(logits, feed_dict = {data_placeholder : testd}) ;
